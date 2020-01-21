@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# START DEPENDENCY CHECK 
+
+# `declare -a` says that this is an indexed array
+declare -a cmds=("jq" "curl" "xargs")
+
+for cmd in "${cmds[@]}"
+do
+  # See if the command doesn't exist
+  if ! type "$cmd" > /dev/null; then
+    echo "You need to install $cmd";
+    exit 1
+  fi
+done
+
+# END DEPENDENCY CHECK
+
+# Make sure we have all the args needed
+if [ "$#" -lt 3 ]; then
+  echo "This needs at least 3 paramaters passed (and probably the tokenize endpoint set)"
+  echo "Everything past the first two args are a curl command"
+  echo "usage: jwtcurl <token_data> <token_endpoint> <curl args>"
+  echo "example: jwtcurl \"email=e@example.com&password=password\" http://mytoken.endpoint --data \"dataI'mSending\" http://authed.endpoint"
+fi
+
+token_data=$1
+token_endpoint=$2
+
+argv=( "$@" )
+curl_args="${argv[@]:2}"
+
+# first we get the token, extract the token with jq (may need to change how the token is extracted) and then do the actual curl command
+curl --data "$token_data" $token_endpoint | \
+  jq -r '.token' | \
+  xargs -I {} curl -H "Authorization: Bearer {}" $curl_args
+
+#curl --data "email=$1&password=$2" http://localhost:8080/tokenize | jq -r '.token' | xargs -I {} curl -H "Authorization: bearer {}" $3 

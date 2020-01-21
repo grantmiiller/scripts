@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+QUOTE_FILE=~/scripts/quotes.txt
+if [ -f $QUOTE_FILE ]; then
+  echo ""
+  echo ""
+  head -$((${RANDOM} % `wc -l < $QUOTE_FILE` + 1)) $QUOTE_FILE | tail -1
+  echo ""
+  echo ""
+fi;
